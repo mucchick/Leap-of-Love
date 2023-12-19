@@ -9,18 +9,23 @@ using UnityEngine.Serialization;
 public class PlayerMovement : MonoBehaviour
 {
     private InputManager _inputManager;
-    public InputActionReference input;
+    private InputActionReference input;
     private Rigidbody2D _rb;
     private BoxCollider2D _box2d;
     private Transform _transform;
     private Animator _animator;
+    private float jumpTimeCounter;
+    private bool isJumping;
 
     [SerializeField] private float forceMultiplier;
-    [SerializeField] private float jumpMultiplier;
+    [SerializeField] private float minJumpForce;
+    [SerializeField] private float maxJumpForce;
+    [SerializeField] private float maxJumpTime;
     [SerializeField] private float topSpeed;
     [SerializeField] private float friction;
     [SerializeField] private LayerMask platformLayer;
     [SerializeField] private LayerMask deathLayer;
+    [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private GameObject respawnPoint;
     [SerializeField] private Vector2 boxSize;
     [SerializeField] private float castDistance;
@@ -46,7 +51,8 @@ public class PlayerMovement : MonoBehaviour
         Jump(jumpInput);
         _animator.SetFloat("Speed", Math.Abs(_rb.velocity.x)); 
         _animator.SetBool("Grounded", isGrounded());
-        respawn();
+        Respawn();
+        HurtEnemy();
     }
     
 
@@ -80,15 +86,30 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
-
     private void Jump(float jumpInput)
     {
-        if (jumpInput != 0 && isGrounded()) 
+        if (jumpInput > 0 && isGrounded() && !isJumping)
         {
-            _rb.AddForce(new Vector2(0, jumpMultiplier));
+            isJumping = true;
+            jumpTimeCounter = 0;
+            _rb.AddForce(new Vector2(0, minJumpForce), ForceMode2D.Impulse);
         }
 
+        if (jumpInput > 0 && isJumping)
+        {
+            if (jumpTimeCounter < maxJumpTime)
+            {
+                _rb.AddForce(new Vector2(0, (maxJumpForce - minJumpForce) * Time.fixedDeltaTime / maxJumpTime), ForceMode2D.Impulse);
+                jumpTimeCounter += Time.fixedDeltaTime;
+            }
+        }
+        else
+        {
+            isJumping = false;
+        }
     }
+
+
 
     public bool isGrounded()
     {
@@ -102,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void respawn()
+    private void Respawn()
     {
         if (Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, deathLayer))
         {
@@ -110,6 +131,20 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void HurtEnemy()
+    {
+        RaycastHit2D hit = Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, enemyLayer);
+        if (hit.collider != null)
+        {
+            Debug.Log("Hit detected");
+            EnemyClass enemy = hit.collider.GetComponent<EnemyClass>();
+            if (enemy != null)
+            {
+                enemy.Hurt();
+                _rb.AddForce(new Vector2(0, minJumpForce * 1.5f), ForceMode2D.Impulse);
+            }
+        }
+    }
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position - transform.up * castDistance, boxSize);
