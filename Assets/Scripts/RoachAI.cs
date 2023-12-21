@@ -13,7 +13,7 @@ public class RoachAI : EnemyClass
     private BoxCollider2D _box2D;
     private Animator _animator;
     private bool isShrinking = false;
-    
+    private bool inRange = false;
 
     [SerializeField] Vector3 shrinkRate;
     [SerializeField] Vector3 shrinkThreshold;
@@ -93,4 +93,10 @@ public class RoachAI : EnemyClass
         gameObject.SetActive(false);
         isShrinking = false;
     }
+
+    public override void FollowPlayer()
+    {
+        
+    }
+    
 }
