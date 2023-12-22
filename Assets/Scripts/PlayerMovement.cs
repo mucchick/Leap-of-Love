@@ -16,7 +16,9 @@ public class PlayerMovement : MonoBehaviour
     private Animator _animator;
     private float jumpTimeCounter;
     private bool isJumping;
+    private bool isAnimating;
 
+    [SerializeField] private DeathAnimation deathAnimation;
     [SerializeField] private float forceMultiplier;
     [SerializeField] private float minJumpForce;
     [SerializeField] private float maxJumpForce;
@@ -45,13 +47,19 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        isAnimating = deathAnimation.isAnimating;
         float moveInput = _inputManager.Movement.Walk.ReadValue<float>();
         float jumpInput = _inputManager.Movement.Jump.ReadValue<float>();
-        Walk(moveInput);
-        Jump(jumpInput);
+        if (!isAnimating)
+        {
+            Walk(moveInput);
+            Jump(jumpInput);
+        }
         _animator.SetFloat("Speed", Math.Abs(_rb.velocity.x)); 
         _animator.SetBool("Grounded", isGrounded());
-        Respawn();
+        if (isDead())
+        {
+            StartCoroutine(Respawn());}
         HurtEnemy();
     }
     
@@ -123,12 +131,32 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void Respawn()
+    private IEnumerator Respawn()
+    {
+        
+        deathAnimation.TriggerDeathAnimation();
+        
+        yield return new WaitWhile(() => deathAnimation.isAnimating);
+
+        _rb.bodyType = RigidbodyType2D.Static;
+        deathAnimation.TriggerRespawnAnimation();
+        transform.position = respawnPoint.transform.position;
+        _rb.bodyType = RigidbodyType2D.Dynamic;
+
+
+
+    }
+
+    private bool isDead()
     {
         if (Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, deathLayer))
         {
-            transform.position = respawnPoint.transform.position;
+
+            return true;
+
         }
+
+        return false;
     }
 
     private void HurtEnemy()
