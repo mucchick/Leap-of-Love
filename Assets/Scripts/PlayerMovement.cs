@@ -5,9 +5,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public bool contact = false;
+    
+    private bool die;
     private InputManager _inputManager;
     private InputActionReference input;
     private Rigidbody2D _rb;
@@ -29,8 +33,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask deathLayer;
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private GameObject respawnPoint;
-    [SerializeField] private Vector2 boxSize;
-    [SerializeField] private float castDistance;
+    [SerializeField] private Vector2 bodyBoxSize;
+    [SerializeField] private Vector2 feetBoxSize;
+    [SerializeField] private float feetCastDistance;
+    [SerializeField] private float bodyCastDistance;
     
     private void Awake()
     {
@@ -61,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
         {
             StartCoroutine(Respawn());}
         HurtEnemy();
+        Die();
     }
     
 
@@ -121,7 +128,7 @@ public class PlayerMovement : MonoBehaviour
 
     public bool isGrounded()
     {
-        if (Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, platformLayer))
+        if (Physics2D.BoxCast(transform.position, feetBoxSize, 0, -transform.up, feetCastDistance, platformLayer))
         {
             return true;
         }
@@ -149,7 +156,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool isDead()
     {
-        if (Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, deathLayer))
+        if (Physics2D.BoxCast(transform.position, feetBoxSize, 0, -transform.up, feetCastDistance, deathLayer))
         {
 
             return true;
@@ -161,7 +168,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void HurtEnemy()
     {
-        RaycastHit2D hit = Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, enemyLayer);
+        RaycastHit2D hit = Physics2D.BoxCast(transform.position, feetBoxSize, 0, -transform.up, feetCastDistance, enemyLayer);
         if (hit.collider != null)
         {
             Debug.Log("Hit detected");
@@ -169,12 +176,23 @@ public class PlayerMovement : MonoBehaviour
             if (enemy != null)
             {
                 enemy.Hurt();
-                _rb.AddForce(new Vector2(0, minJumpForce * 1.5f), ForceMode2D.Impulse);
+                _rb.AddForce(new Vector2(0, minJumpForce * 2f), ForceMode2D.Impulse);
             }
         }
     }
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireCube(transform.position - transform.up * castDistance, boxSize);
+        Gizmos.DrawWireCube(transform.position - transform.up * feetCastDistance, feetBoxSize);
+        Gizmos.DrawWireCube(transform.position - transform.up * bodyCastDistance, bodyBoxSize);
+    }
+
+    private void Die()
+    {
+        RaycastHit2D hit = Physics2D.BoxCast(transform.position, bodyBoxSize, 0, -transform.up, bodyCastDistance, enemyLayer);
+        if (hit.collider != null)
+        {
+            StartCoroutine(Respawn());
+            
+        }
     }
 }

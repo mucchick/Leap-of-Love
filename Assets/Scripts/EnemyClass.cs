@@ -5,5 +5,4 @@ using UnityEngine;
 public abstract class EnemyClass : MonoBehaviour
 {
     public abstract void Hurt();
-    public abstract void FollowPlayer();
 }

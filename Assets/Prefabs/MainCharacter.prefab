@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8485323477952416018}
   - component: {fileID: 1291026055025586857}
   - component: {fileID: 2867739326807795211}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: MainCharacter
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -172,6 +172,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2aa6bea6aefb348289ad8a969cb872a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  contact: 0
+  deathAnimation: {fileID: 0}
   forceMultiplier: 25
   minJumpForce: 1
   maxJumpForce: 7
@@ -187,9 +189,11 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 256
-  respawnPoint: {fileID: 0}
-  boxSize: {x: 0.89, y: 0.28}
-  castDistance: 0.95
+  respawnPoint: {fileID: 5898794255910956930, guid: a24324ec45a8d499da7e4b6d9aab8420, type: 3}
+  bodyBoxSize: {x: 0, y: 0}
+  feetBoxSize: {x: 0, y: 0}
+  feetCastDistance: 0
+  bodyCastDistance: 0
 --- !u!95 &2867739326807795211
 Animator:
   serializedVersion: 5
